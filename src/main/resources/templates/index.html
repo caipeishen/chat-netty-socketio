@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>NETTY SOCKET.IO DEMO</title>
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/socket.io.js"></script>
+    <link rel="stylesheet" href="/css/index.css">
+</head>
+
+<body>
+    <div>
+        <ul class="pages">
+            <li class="chat page">
+                <div class="chatArea">
+                    <ul class="messages"></ul>
+                </div>
+                <input class="inputMessage" placeholder="Type here...">
+            </li>
+            <li class="login page">
+                <div class="form">
+                    <h3 class="title">What's your nickname?</h3>
+                    <input class="sendUserInput" type="text" maxlength="14">
+                </div>
+            </li>
+        </ul>
+    </div>
+</body>
+
+<script type="text/javascript">
+
+    $(function(){
+
+        let socket;
+        let sendUser = '';
+        var COLORS = [
+            '#e21400', '#91580f', '#f8a700', '#f78b00',
+            '#58dc00', '#287b00', '#a8f07a', '#4ae8c4',
+            '#3b88eb', '#3824aa', '#a700ff', '#d300e7'
+        ];
+
+        $(window).keydown(event => {
+            // 键盘回车：如果没输入名称则表示登录，输入过表示发送消息
+            if (event.which === 13) {
+                if (sendUser) {
+                    send();
+                } else {
+                    connect();
+                }
+            }
+        });
+
+        // 得到用户颜色
+        const getUsernameColor = (username) => {
+            // Compute hash code
+            var hash = 7;
+            for (var i = 0; i < username.length; i++) {
+                hash = username.charCodeAt(i) + (hash << 5) - hash;
+            }
+            // Calculate color
+            var index = Math.abs(hash % COLORS.length);
+            return COLORS[index];
+        }
+
+        function connect() {
+            sendUser = $(".sendUserInput").val();
+            console.log("昵称:"+sendUser);
+            let opts = {
+                query: 'sendUser=' + sendUser
+            };
+            socket = io.connect('http://localhost:9099', opts);
+            // 连接
+            socket.on('connect', function () {
+                console.log("连接成功");
+                $(".login.page").hide();
+                $(".chat.page").show();
+                serverOutput(`<li class="log" style="display: list-item;">Welcome to Socket.IO Chat – </li>`);
+            });
+            // 接受消息
+            socket.on('push_event', function (data) {
+                let message = JSON.parse(data);
+                let html = `<span class="username" style="color:${getUsernameColor(message.sendUser)}">${message.sendUser}：</span><span class="messageBody">${message.content}</span>`;
+                output(html);
+                console.log(message);
+            });
+            // 断开连接
+            socket.on('disconnect', function () {
+                serverOutput(`<li class="log" style="display:list-item;color: red">left</li>`);
+            });
+        }
+
+        function output(message) {
+            let element = $("<li>" + " " + message + "</li>");
+            $('.messages').append(element);
+        }
+
+        function serverOutput(message) {
+            let element = $("<div>" + message + "</div>");
+            $('.messages').append(element);
+        }
+
+        function send() {
+            let content = $('.inputMessage').val();
+            socket.emit('text',{'sendUser':sendUser, 'content':content});
+            $('.inputMessage').val('');
+        }
+
+    })
+
+</script>
+</html>
