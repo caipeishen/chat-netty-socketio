@@ -22,6 +22,10 @@
                     <h3 class="title">What's your nickname?</h3>
                     <input class="sendUserInput" type="text" maxlength="14">
                 </div>
+                <div class="form" style="display: none">
+                    <h3 class="title">What's the room number for your chat?</h3>
+                    <input class="roomInput" type="text" maxlength="14">
+                </div>
             </li>
         </ul>
     </div>
@@ -33,20 +37,44 @@
 
         let socket;
         let sendUser = '';
+        let room = '';
+        let content = '';
+
         var COLORS = [
             '#e21400', '#91580f', '#f8a700', '#f78b00',
             '#58dc00', '#287b00', '#a8f07a', '#4ae8c4',
             '#3b88eb', '#3824aa', '#a700ff', '#d300e7'
         ];
 
-        $(window).keydown(event => {
-            // 键盘回车：如果没输入名称则表示登录，输入过表示发送消息
-            if (event.which === 13) {
-                if (sendUser) {
-                    send();
-                } else {
-                    connect();
-                }
+
+        $(".login.page .form:eq(0) input").focus();
+
+        // 发送昵称-回车触发事件
+        $(".sendUserInput").keyup(function(event){
+            if(event.keyCode ==13){
+                console.log("发送昵称输入完成");
+                sendUser = $('.sendUserInput').val();
+                $(".login.page .form:eq(0)").hide();
+                $(".login.page .form:eq(1)").show();
+                $(".login.page .form:eq(1) input").focus();
+            }
+        });
+
+        // 聊天室房间号-回车触发事件
+        $(".roomInput").keyup(function(event){
+            if(event.keyCode ==13){
+                console.log("接受昵称输入完成");
+                room = $('.roomInput').val();
+                connect();
+            }
+        });
+
+        // 发送信息-回车触发事件
+        $(".inputMessage").keyup(function(event){
+            if(event.keyCode ==13){
+                console.log('发送');
+                content = $('.inputMessage').val();
+                send();
             }
         });
 
@@ -59,14 +87,14 @@
             }
             // Calculate color
             var index = Math.abs(hash % COLORS.length);
-            return COLORS[sb];
+            return COLORS[index];
         }
 
         function connect() {
-            sendUser = $(".sendUserInput").val();
-            console.log("昵称:"+sendUser);
+            console.log('准备建立连接');
+            console.log(`昵称:${sendUser}，聊天室:${room}`);
             let opts = {
-                query: 'sendUser=' + sendUser
+                query: `sendUser=${sendUser}&room=${room}`
             };
             socket = io.connect('http://localhost:9099', opts);
             // 连接
@@ -81,7 +109,6 @@
                 let message = JSON.parse(data);
                 let html = `<span class="username" style="color:${getUsernameColor(message.sendUser)}">${message.sendUser}：</span><span class="messageBody">${message.content}</span>`;
                 output(html);
-                console.log(message);
             });
             // 断开连接
             socket.on('disconnect', function () {
@@ -100,8 +127,7 @@
         }
 
         function send() {
-            let content = $('.inputMessage').val();
-            socket.emit('text',{'sendUser':sendUser, 'content':content});
+            socket.emit('text',{'sendUser':sendUser, 'room':room, 'content':content});
             $('.inputMessage').val('');
         }
 

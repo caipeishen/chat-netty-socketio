@@ -11,10 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class SocketController {
     
-    // 所有人对话
-    @RequestMapping({"/", "sb-all"})
-    public String sbToAll() {
-        return "sb-all";
+    @RequestMapping("/")
+    public String index() {
+        return "index";
     }
     
 }

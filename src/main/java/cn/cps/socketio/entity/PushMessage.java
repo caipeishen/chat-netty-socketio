@@ -14,11 +14,11 @@ import lombok.*;
 @Builder
 public class PushMessage {
     
-    // 登录用户编号
+    // 发送用户
     private String sendUser;
     
-    // 接受用户
-    private String receiveUser;
+    // 聊天房间
+    private String room;
     
     // 推送内容
     private String content;

@@ -2,6 +2,7 @@ package cn.cps.socketio.service.impl;
 
 import cn.cps.socketio.entity.PushMessage;
 import cn.cps.socketio.service.SocketIOService;
+import com.corundumstudio.socketio.BroadcastOperations;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.handler.SocketIOException;
@@ -10,12 +11,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.util.internal.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -26,10 +30,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service(value = "socketIOService")
 public class SocketIOServiceImpl implements SocketIOService {
     
+    private ObjectMapper objectMapper = new ObjectMapper();
+    
     // 用来存已连接的客户端
     private static Map<String, SocketIOClient> clientMap = new ConcurrentHashMap<>();
-    
-    private ObjectMapper objectMapper = new ObjectMapper();
     
     @Autowired
     private SocketIOServer socketIOServer;
@@ -56,29 +60,28 @@ public class SocketIOServiceImpl implements SocketIOService {
     
     @Override
     public void start() throws Exception {
+        // 创建个人对个人聊天命名空间
+        this.socketIOServer.addNamespace("chat-namespace");
+        
         // 监听客户端连接
         this.socketIOServer.addConnectListener(client -> {
-            String sendUser = getParamsByClient(client);
-            if (sendUser != null) {
-                System.out.println(sendUser);
+            PushMessage pushMessage = this.getParamsByClient(client);
+            if (pushMessage.getSendUser() != null && pushMessage.getRoom() !=null) {
+                client.joinRoom(pushMessage.getRoom());
+                System.out.println(pushMessage.getSendUser()+"进入了"+pushMessage.getRoom()+"房间");
                 System.out.println("SessionId:  " + client.getSessionId());
                 System.out.println("RemoteAddress:  " + client.getRemoteAddress());
                 System.out.println("Transport:  " + client.getTransport());
-                if (clientMap.get(sendUser) == null) {
-                    this.clientMap.put(sendUser, client);
-                } else {
-                    throw new SocketIOException("该昵称在线，请切换昵称~~");
-                }
+                this.clientMap.put(pushMessage.getSendUser(), client);
             }
         });
         
         // 监听客户端断开连接
         this.socketIOServer.addDisconnectListener(client -> {
-            String sendUser = getParamsByClient(client);
-            if (sendUser != null) {
-                this.clientMap.remove(sendUser);
-                System.out.println("断开连接： " + sendUser);
-                System.out.println("断开连接： " + client.getSessionId());
+            PushMessage pushMessage = this.getParamsByClient(client);
+            if (pushMessage != null) {
+                client.leaveRoom(pushMessage.getRoom());
+                System.out.println(pushMessage.getSendUser()+"离开了"+pushMessage.getRoom()+"房间");
                 client.disconnect();
             }
         });
@@ -110,21 +113,7 @@ public class SocketIOServiceImpl implements SocketIOService {
         String sendUser = pushMessage.getSendUser();
         if (!StringUtil.isNullOrEmpty(sendUser)) {
             String dataJSON = objectMapper.writeValueAsString(pushMessage);
-            // 有接受者则发送接收者，无则发给所有人
-            if (StringUtil.isNullOrEmpty(pushMessage.getReceiveUser())) {
-                // 和所有人沟通
-                this.clientMap.values().forEach(client -> {
-                    if (client != null) {
-                        client.sendEvent(PUSH_EVENT, dataJSON);
-                    }
-                });
-            } else {
-                // 具体个人
-                SocketIOClient client = this.clientMap.get(pushMessage.getReceiveUser());
-                if (client != null) {
-                    client.sendEvent(PUSH_EVENT, dataJSON);
-                }
-            }
+            this.socketIOServer.getRoomOperations(pushMessage.getRoom()).sendEvent(PUSH_EVENT, dataJSON);
         }
     }
     
@@ -133,14 +122,22 @@ public class SocketIOServiceImpl implements SocketIOService {
      * @param client
      * @return
      */
-    private String getParamsByClient(SocketIOClient client) {
-        // 从请求的连接中拿出参数（这里的sendUser必须是唯一标识）
+    private PushMessage getParamsByClient(SocketIOClient client) {
+        PushMessage pushMessage = new PushMessage();
         Map<String, List<String>> params = client.getHandshakeData().getUrlParams();
-        List<String> list = params.get("sendUser");
-        if (list != null && list.size() > 0) {
-            return list.get(0);
+        List<String> sendUserList = params.get("sendUser");
+        List<String> roomList = params.get("room");
+        List<String> contentList = params.get("content");
+        if (sendUserList != null && sendUserList.size() > 0) {
+            pushMessage.setSendUser(sendUserList.get(0));
         }
-        return null;
+        if (roomList != null && roomList.size() > 0) {
+            pushMessage.setRoom(roomList.get(0));
+        }
+        if (contentList != null && contentList.size() > 0) {
+            pushMessage.setContent(contentList.get(0));
+        }
+        return pushMessage;
     }
     
     public static Map<String, SocketIOClient> getClientMap() {

@@ -61,7 +61,7 @@ ul {
     width: 100%;
 }
 
-.login.page .form .sendUserInput, .receiveUserInput {
+.login.page .form .sendUserInput, .roomInput {
     background-color: transparent;
     border: none;
     border-bottom: 2px solid #fff;
@@ -75,12 +75,12 @@ ul {
     font-size: 200%;
 }
 
-.login.page .sendUserInput,.receiveUserInput{
+.login.page .sendUserInput,.roomInput{
     font-size: 200%;
     letter-spacing: 3px;
 }
 
-.login.page .title, .login.page .sendUserInput, .receiveUserInput{
+.login.page .title, .login.page .sendUserInput, .roomInput{
     color: #fff;
     font-weight: 100;
 }
