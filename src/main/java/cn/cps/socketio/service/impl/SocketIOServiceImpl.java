@@ -2,25 +2,18 @@ package cn.cps.socketio.service.impl;
 
 import cn.cps.socketio.entity.PushMessage;
 import cn.cps.socketio.service.SocketIOService;
-import com.corundumstudio.socketio.BroadcastOperations;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
-import com.corundumstudio.socketio.handler.SocketIOException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.util.internal.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @Author: Cai Peishen
@@ -31,9 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SocketIOServiceImpl implements SocketIOService {
     
     private ObjectMapper objectMapper = new ObjectMapper();
-    
-    // 用来存已连接的客户端
-    private static Map<String, SocketIOClient> clientMap = new ConcurrentHashMap<>();
     
     @Autowired
     private SocketIOServer socketIOServer;
@@ -72,7 +62,6 @@ public class SocketIOServiceImpl implements SocketIOService {
                 System.out.println("SessionId:  " + client.getSessionId());
                 System.out.println("RemoteAddress:  " + client.getRemoteAddress());
                 System.out.println("Transport:  " + client.getTransport());
-                this.clientMap.put(pushMessage.getSendUser(), client);
             }
         });
         
@@ -140,11 +129,4 @@ public class SocketIOServiceImpl implements SocketIOService {
         return pushMessage;
     }
     
-    public static Map<String, SocketIOClient> getClientMap() {
-        return clientMap;
-    }
-    
-    public static void setClientMap(Map<String, SocketIOClient> clientMap) {
-        SocketIOServiceImpl.clientMap = clientMap;
-    }
 }
