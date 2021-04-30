@@ -49,8 +49,8 @@ public class SocketIOConfig {
         socketConfig.setSoLinger(0);
         com.corundumstudio.socketio.Configuration config = new com.corundumstudio.socketio.Configuration();
         config.setSocketConfig(socketConfig);
-        config.setHostname(host);
         config.setPort(port);
+        config.setOrigin(null);
         config.setBossThreads(bossCount);
         config.setWorkerThreads(workCount);
         config.setAllowCustomRequests(allowCustomRequests);
