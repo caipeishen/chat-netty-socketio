@@ -52,8 +52,12 @@
         // 发送昵称-回车触发事件
         $(".sendUserInput").keyup(function(event){
             if(event.keyCode ==13){
-                console.log("发送昵称输入完成");
                 sendUser = $('.sendUserInput').val();
+                if (sendUser == '' || sendUser == null) {
+                    alert("Please enter nickname!");
+                    return;
+                }
+                console.log("发送昵称输入完成");
                 $(".login.page .form:eq(0)").hide();
                 $(".login.page .form:eq(1)").show();
                 $(".login.page .form:eq(1) input").focus();
@@ -63,8 +67,12 @@
         // 聊天室房间号-回车触发事件
         $(".roomInput").keyup(function(event){
             if(event.keyCode ==13){
-                console.log("接受昵称输入完成");
                 room = $('.roomInput').val();
+                if (room == '' || room == null) {
+                    alert("Please enter room's number!");
+                    return;
+                }
+                console.log("房间号输入完成");
                 connect();
             }
         });
