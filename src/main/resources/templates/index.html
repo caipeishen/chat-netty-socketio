@@ -96,7 +96,7 @@
             let opts = {
                 query: `sendUser=${sendUser}&room=${room}`
             };
-            socket = io.connect('http://nianshaoyouwei.club:8974', opts);
+            socket = io.connect('http://127.0.0.1:8974', opts);
             // 连接
             socket.on('connect', function () {
                 console.log("连接成功");
