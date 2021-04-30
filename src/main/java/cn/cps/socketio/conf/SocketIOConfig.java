@@ -14,9 +14,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SocketIOConfig {
     
-    @Value("${socketio.host}")
-    private String host;
-    
     @Value("${socketio.port}")
     private Integer port;
     
@@ -45,8 +42,6 @@ public class SocketIOConfig {
     @Bean
     public SocketIOServer socketIOServer() {
         SocketConfig socketConfig = new SocketConfig();
-        socketConfig.setTcpNoDelay(true);
-        socketConfig.setSoLinger(0);
         com.corundumstudio.socketio.Configuration config = new com.corundumstudio.socketio.Configuration();
         config.setSocketConfig(socketConfig);
         config.setPort(port);

@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>NETTY SOCKET.IO DEMO</title>
+    <title>聊天室</title>
     <script src="./js/jquery.min.js"></script>
     <script src="./js/socket.io.js"></script>
     <link rel="stylesheet" href="./css/index.css">
@@ -96,7 +96,7 @@
             let opts = {
                 query: `sendUser=${sendUser}&room=${room}`
             };
-            socket = io.connect('http://localhost:9099', opts);
+            socket = io.connect('http://nianshaoyouwei.club:8974', opts);
             // 连接
             socket.on('connect', function () {
                 console.log("连接成功");
